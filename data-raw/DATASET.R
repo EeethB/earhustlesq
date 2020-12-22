@@ -28,6 +28,32 @@ links_tscripts <- eh_tscripts %>%
 purrr::map(links_tscripts, get_pdf)
 
 # Process PDF text
-pdftools::pdf_text("data-raw/PDF/Cellies-transcript.pdf")
+get_text <- function(pdf) {
+  txt <- pdftools::pdf_text(pdf) %>%
+    paste(collapse = " ")
+
+  nm_pattern <- "Ep.*(?=\\r)"
+  dt_pattern <- "(?<=air.*:).*(?=\\r)"
+
+  ep_nm <- stringr::str_extract(txt, nm_pattern)
+  ep_dt <- stringr::str_extract(txt, dt_pattern)
+
+  ep_text <- txt %>%
+    stringr::str_remove(ep_nm) %>%
+    stringr::str_remove("First aired .*\\r") %>%
+    trimws()
+
+  time_pattern <- paste0(
+    "(?<=\\[)", # Look-behind for open square bracket
+    "[[0-9:.]]*", # Numbers, colon, or period
+    "(?=\\])" # Look-ahead for closed square bracket
+  )
+
+  ep_text
+}
+
+tmp_cellies <- get_text("data-raw/PDF/Catch-a-Kite-5-Transcript.pdf")
+
+stringr::str_split(tmp_cellies, "\\[.*\\]")
 
 usethis::use_data(DATASET, overwrite = TRUE)
